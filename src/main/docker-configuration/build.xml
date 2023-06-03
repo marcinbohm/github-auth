@@ -1,0 +1,96 @@
+<project name="Github Auth Config" default="start" basedir=".">
+
+    <!-- ==================== Properties =========================================================================== -->
+    <property file="build.properties" />
+
+    <!-- ==================== Start Recruitment Solution ================================================================ -->
+    <target name="start">
+        <antcall target="login_docker" />
+        <antcall target="pull_images" />
+        <antcall target="start_back" />
+    </target>
+
+    <target name="start_local">
+        <antcall target="start_back" />
+    </target>
+
+    <target name="pull_images" if="${server.pull.images}">
+        <exec executable="docker-compose">
+            <arg value="-f" />
+            <arg value="docker-compose.yml" />
+            <arg value="pull" />
+        </exec>
+    </target>
+
+    <target name="start_back">
+        <exec executable="docker-compose">
+            <arg value="-f" />
+            <arg value="docker-compose.yml" />
+            <arg value="up" />
+            <arg value="-d" />
+            <arg value="github-auth" />
+        </exec>
+    </target>
+
+    <!-- ==================== Stop Recruitment Solution ========================================================= -->
+    <target name="stop">
+        <exec executable="docker-compose">
+            <arg value="down" />
+        </exec>
+    </target>
+
+    <!-- ==================== Log in do serwera Docker Registry ==================================================== -->
+    <target name="login_docker" depends="sprawdz">
+        <exec executable="docker">
+            <arg value="login" />
+            <arg value="${gitlab.server}" />
+            <arg value="-u" />
+            <arg value="${gitlab.user}" />
+            <arg value="-p" />
+            <arg value="${gitlab.token}" />
+        </exec>
+    </target>
+
+    <!-- ==================== Log out do serwera Docker Registry =================================================== -->
+    <target name="logout_docker" depends="sprawdz">
+        <exec executable="docker">
+            <arg value="logout" />
+            <arg value="${gitlab.server}" />
+        </exec>
+    </target>
+
+    <!-- ==================== Sprawdz ============================================================================== -->
+    <target name="sprawdz" description="Sprawdzenie ustawien" >
+        <fail message="Plik build.properties nie istnieje">
+            <condition>
+                <not>
+                    <available file="build.properties" />
+                </not>
+            </condition>
+        </fail>
+
+        <fail message="!!! Brak wartośći gitlab.server !!!${line.separator}Proszę nadać wartość w build.properties">
+            <condition>
+                <not>
+                    <isset property="gitlab.server"/>
+                </not>
+            </condition>
+        </fail>
+
+        <fail message="!!! Brak wartośći gitlab.user !!!${line.separator}Proszę nadać wartość w build.properties">
+            <condition>
+                <not>
+                    <isset property="gitlab.user"/>
+                </not>
+            </condition>
+        </fail>
+
+        <fail message="!!! Brak wartośći gitlab.token !!!${line.separator}Proszę nadać wartość w build.properties">
+            <condition>
+                <not>
+                    <isset property="gitlab.token"/>
+                </not>
+            </condition>
+        </fail>
+    </target>
+</project>

@@ -1,0 +1,63 @@
+github:
+  client:
+    timeout: ${GITHUB_CLIENT_TIMEOUT:"100"}
+    apiVersion: ${GITHUB_API_VERSION}
+    trustStore: ${GITHUB_TRUST_STORE_PATH}
+    trustStorePassword: ${GITHUB_TRUST_STORE_PASSWORD}
+server:
+  port: ${APP_PORT}
+  error:
+    include-message: always
+spring:
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE}
+  security:
+    oauth2:
+      client:
+        registration:
+          github:
+            clientId: ${GITHUB_CLIENT_ID}
+            clientSecret: ${GITHUB_CLIENT_SECRET}
+management:
+  endpoint:
+    info:
+      enabled: true
+    health:
+      enabled: true
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        register-health-indicator: true
+        sliding-window-size: '10'
+        sliding-window-type: 'COUNT_BASED'
+        minimum-number-of-calls: '5'
+        permitted-number-of-calls-in-half-open-state: '3'
+        wait-duration-in-open-state: '5s'
+        failure-rate-threshold: '50'
+        automatic-transition-from-open-to-half-open-enabled: true
+  ratelimiter:
+    configs:
+      default:
+        register-health-indicator: true
+        limit-for-period: '10'
+        limit-refresh-period: '1s'
+        timeout-duration: '1s'
+        allow-health-indicator-to-fail: true
+  retry:
+    configs:
+      default:
+        max-attempts: '3'
+        wait-duration: '1s'
+        retryExceptions:
+          - java.io.IOException
+          - java.util.concurrent.TimeoutException
+  bulkhead:
+    configs:
+      default:
+        max-concurrent-calls: 10
+        max-wait-duration: '1000ms'
+  timelimiter:
+    configs:
+      default:
+        timeout-duration: '5s'
